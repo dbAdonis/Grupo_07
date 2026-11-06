@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<!--
+  CHRONICLES – El Despertar de las Métricas
+  Juego educativo RPG sobre Métricas de Pruebas de Software.
+  Archivo único: HTML5 + CSS + JavaScript (sin librerías ni servidor).
+  Estructura: 1) <style> estilos  2) <div id="v"> pantalla  3) <script> lógica y datos.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CHRONICLES – El Despertar de las Métricas</title>
+  <style>
+  /* ===== PALETA Y BASE ===== */
+  :root {
+    --b: #00A8FF;
+    --c: #00F0FF;
+    --v: #8B5CF6;
+    --k: #080D19;
+    --r: #FF334F;
+    --w: #F1F5F9;
+    --g: #3DFFA2;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  /* Fondo oscuro con líneas de escaneo */
+  body {
+    background: radial-gradient(ellipse at 50% 0,#17255a,var(--k) 70%) fixed;
+    color: var(--w);
+    font: 15px/1.5 Consolas,'Courier New',monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body:after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg,#0000 0 2px,#00f0ff0a 3px);
+    z-index: 9;
+  }
+
+  /* Contenedor de pantallas */
+  #v {
+    max-width: 960px;
+    margin: auto;
+    padding: 14px;
+    min-height: 100vh;
+    animation: in .5s;
+  }
+
+  @keyframes in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  /* Panel holográfico */
+  .p {
+    background: #0c1530d9;
+    border: 1px solid #00f0ff55;
+    box-shadow: 0 0 18px #00a8ff2b inset,0 0 12px #00a8ff22;
+    border-radius: 10px;
+    padding: 16px;
+    margin: 10px 0;
+  }
+
+  /* Logo y efecto glitch */
+  h1 {
+    font: 900 clamp(34px,9vw,76px)/1 'Segoe UI',Arial,sans-serif;
+    letter-spacing: .12em;
+    color: var(--c);
+    text-shadow: 0 0 18px var(--b);
+  }
+
+  .gl {
+    animation: gl 3s infinite;
+  }
+
+  @keyframes gl {
+    0%,92%,100% {
+      text-shadow: 0 0 18px var(--b);
+    }
+    94% {
+      text-shadow: 4px 0 var(--r),-4px 0 var(--v);
+      transform: skewX(6deg);
+    }
+    97% {
+      text-shadow: -4px 0 var(--r),4px 0 var(--c);
+    }
+  }
+
+  .sub {
+    letter-spacing: .35em;
+    color: var(--v);
+    font-weight: 700;
+    margin: 6px 0 18px;
+    font-size: clamp(11px,3vw,16px);
+  }
+
+  .mn {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 320px;
+    margin: 20px auto;
+  }
+
+  /* Botones */
+  .bt {
+    background: #00a8ff1a;
+    color: var(--c);
+    border: 1px solid var(--c);
+    padding: 10px 18px;
+    font: 700 14px inherit;
+    font-family: inherit;
+    letter-spacing: .08em;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: .2s;
+  }
+
+  .bt:hover:not(:disabled) {
+    background: var(--c);
+    color: var(--k);
+    box-shadow: 0 0 16px var(--c);
+  }
+
+  .bt:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+  }
+
+  .bt.r {
+    color: var(--r);
+    border-color: var(--r);
+  }
+
+  .bt.r:hover {
+    background: var(--r);
+    color: #fff;
+    box-shadow: 0 0 16px var(--r);
+  }
+
+  /* Avatares y colores de texto */
+  .av {
+    font-size: 64px;
+    filter: drop-shadow(0 0 10px var(--c));
+  }
+
+  .av2 {
+    font-size: 46px;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .rd {
+    color: var(--r);
+  }
+
+  .g {
+    color: var(--g);
+  }
+
+  .dim {
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
+  /* Barras de vida y XP */
+  .bar {
+    height: 12px;
+    background: #0b1226;
+    border: 1px solid #00f0ff44;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+
+  .bar i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg,var(--b),var(--c));
+    transition: width .7s;
+  }
+
+  .bar.e i {
+    background: linear-gradient(90deg,var(--r),#ff7a59);
+  }
+
+  /* Tarjetas del mapa */
+  .ch {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .lk {
+    opacity: .5;
+    filter: grayscale(.8);
+  }
+
+  .tg {
+    font-size: 11px;
+    padding: 1px 8px;
+    border: 1px solid var(--c);
+    border-radius: 20px;
+    margin-left: 6px;
+  }
+
+  .tg.g {
+    border-color: var(--g);
+  }
+
+  .tg.r {
+    border-color: var(--r);
+    color: var(--r);
+  }
+
+  /* HUD del combate */
+  .hud {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+
+  .core {
+    font-size: 22px;
+    color: var(--r);
+    text-shadow: 0 0 8px var(--r);
+    letter-spacing: 3px;
+  }
+
+  /* Animaciones del enemigo */
+  .en {
+    font-size: clamp(70px,18vw,120px);
+    display: inline-block;
+    animation: fl 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 14px var(--v));
+  }
+
+  @keyframes fl {
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .en.hit {
+    animation: sk .5s;
+    filter: drop-shadow(0 0 18px var(--r)) brightness(2);
+  }
+
+  @keyframes sk {
+    25% {
+      transform: translateX(-14px);
+    }
+    75% {
+      transform: translateX(14px);
+    }
+  }
+
+  .en.die {
+    animation: di 1.3s forwards;
+  }
+
+  @keyframes di {
+    to {
+      opacity: 0;
+      filter: blur(14px) hue-rotate(200deg);
+      transform: scale(1.5) skewX(30deg);
+    }
+  }
+
+  .pips {
+    letter-spacing: 4px;
+    font-size: 20px;
+  }
+
+  /* Opciones de respuesta */
+  .op {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #0b1226;
+    color: var(--w);
+    border: 1px solid #00f0ff44;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .op:hover {
+    border-color: var(--c);
+  }
+
+  .op.sel {
+    border-color: var(--c);
+    background: #00a8ff33;
+  }
+
+  .op.ok {
+    border-color: var(--g);
+    background: #3dffa233;
+  }
+
+  .op.no {
+    border-color: var(--r);
+    background: #ff334f33;
+  }
+
+  .q {
+    font-size: 1.08em;
+    margin: 8px 0;
+  }
+
+  /* Destello de daño */
+  .fl {
+    animation: fr .5s;
+  }
+
+  @keyframes fr {
+    30% {
+      box-shadow: 0 0 0 100vmax #ff334f33 inset;
+    }
+  }
+
+  /* Cuadrícula de estadísticas */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
+    gap: 10px;
+  }
+
+  .grid .p {
+    text-align: center;
+    margin: 0;
+  }
+
+  .grid b {
+    font-size: 24px;
+    color: var(--c);
+    display: block;
+  }
+
+  /* Confeti */
+  .cf {
+    position: fixed;
+    top: -10px;
+    width: 8px;
+    height: 14px;
+    z-index: 20;
+    animation: fall linear forwards;
+  }
+
+  @keyframes fall {
+    to {
+      transform: translateY(105vh) rotate(720deg);
+    }
+  }
+
+  </style>
+</head>
+<body>
+  <!-- Contenedor donde el script dibuja cada pantalla del juego -->
+  <div id="v"></div>
+  <script>
+  // ===== UTILIDADES Y ESTADO GUARDADO =====
+  // $ = atajo de querySelector, K = clave de localStorage, D = progreso inicial
+  const $=s => document.querySelector(s), K='chronicles_v1', D=() => ({
+    xp: 0,
+    best: 0,
+    done: [],
+    att: 0,
+    ans: 0,
+    ok: 0,
+    bad: 0,
+    xpQ: [],
+    bonus: [],
+    snd: 1,
+    st: 0
+  });
+  // Estado del jugador: se carga desde localStorage (o se crea uno nuevo)
+  let S;
+  try {
+    S= {
+      ...D(),
+      ...JSON.parse(localStorage.getItem(K))
+    }
+  } catch(e) {
+    S=D()
+  }
+  const sv=() => {
+    try {
+      localStorage.setItem(K, JSON.stringify(S))
+    } catch(e){}
+  }, lv=() => Math.floor(S.xp/300)+1, open=i => i==0||S.done.includes(i-1);
+  // shuf: baraja un arreglo | rnd: elige un elemento al azar
+  const shuf=a => {
+    a=[...a];
+    for(let i=a.length-1; i>0; i--) {
+      const j=Math.random()*(i+1)|0;
+      [a[i], a[j]]=[a[j], a[i]]
+    }
+    return a
+  }, rnd=a => a[Math.random()*a.length|0];
+  // Efectos de sonido con WebAudio (sin archivos externos)
+  let ac;
+  function beep(f, d=.12, t='square') {
+    if(!S.snd)return;
+    try {
+      ac=ac||new(window.AudioContext||webkitAudioContext)();
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type=t;
+      o.frequency.value=f;
+      g.gain.value=.05;
+      o.connect(g);
+      g.connect(ac.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+d);
+      o.stop(ac.currentTime+d)
+    } catch(e){}
+  }
+  // Reemplaza la pantalla actual con una animación de entrada
+  function go(h) {
+    const v=$('#v');
+    v.innerHTML=h;
+    v.style.animation='none';
+    void v.offsetWidth;
+    v.style.animation='';
+    scrollTo(0, 0)
+  }
+  const P= {
+    A: {
+      e: '🧑‍💻',
+      n: 'ALEX'
+    },
+    M: {
+      e: '🤖',
+      n: 'M.A.R.I.A.'
+    },
+    V: {
+      e: '🕴️',
+      n: 'DIRECTOR VANCE'
+    },
+    S: {
+      e: '📡',
+      n: 'TRANSMISIÓN'
+    }
+  };
+  // Insignias: una por cada jefe derrotado
+  const BADGES=[
+    '🛡️ Rompe-Escudos',
+    '👁️ Cazador de Defectos',
+    '⏳ Domador del Tiempo',
+    '⚡ Guardián de la Calidad',
+    '👑 Auditor Legendario'
+  ];
+  const C=[
+    // ===== CAPÍTULO 1 – SECTOR DE COBERTURA (Kovach) =====
+    {
+      n: 'SECTOR DE COBERTURA',
+      // Jefe y su descripción
+      b: 'Kovach',
+      t: 'El Titán de la Cobertura',
+      a: '🗿',
+      ic: '🛡️',
+      d: 'Fundamentos y cobertura de pruebas.',
+      // Escena previa: [personaje, texto]
+      intro: [
+        ['M', 'Alex, el primer subsistema de Genesis-OS está bloqueado.'],
+        [
+          'M',
+          'Kovach protege el acceso al núcleo. Sus escudos se alimentan de código que nunca fue verificado.'
+        ],
+        ['A', 'Entonces debo interpretar la cobertura para debilitarlo.']
+      ],
+      // Mensaje del jefe al iniciar
+      taunt: 'Código sin verificar es mi armadura. ¡Nadie la atravesará!',
+      // Burla del jefe al fallar
+      m: 'Tu cobertura es un espejismo, humano.',
+      // Escena de victoria
+      win: [
+        ['B', 'Mi escudo... verificado... desintegrando...'],
+        ['M', 'Kovach eliminado. Sector de cobertura restaurado. Hay un archivo entre sus restos.']
+      ],
+      // Documento secreto [título, texto]
+      doc: [
+        'Informe de cobertura del núcleo',
+        'Cobertura real de sentencias del núcleo: 31%. El informe oficial declara 94%. Nota al margen de un desarrollador: «Esto no está listo para producción.»'
+      ],
+      // Preguntas del capítulo
+      Q: [
+        // Pregunta 1
+        [
+          'Concepto',
+          'En medición de software, ¿qué es una métrica (frente a una medida)?',
+          'Una relación entre medidas que permite evaluar un atributo, p. ej. 80 ejecutados / 100 diseñados = 80%',
+          'Un dato aislado sin contexto, como «80 casos»',
+          'Una herramienta que automatiza las pruebas',
+          'Un defecto detectado durante la ejecución',
+          'Medida = dato puntual; métrica = cálculo que relaciona medidas; indicador = métrica interpretada frente a un objetivo.'
+        ],
+        // Pregunta 2
+        [
+          'Asociación',
+          '¿Qué fórmula corresponde a la cobertura de sentencias?',
+          '(Sentencias ejecutadas / Total de sentencias) × 100',
+          '(Pruebas aprobadas / Pruebas ejecutadas) × 100',
+          '(Defectos / KLOC) × 100',
+          '(Pruebas fallidas / Pruebas diseñadas) × 100',
+          'Cobertura de sentencias = sentencias ejecutadas por las pruebas ÷ total de sentencias del código, por 100.'
+        ],
+        // Pregunta 3
+        [
+          'Cálculo',
+          'El código tiene 250 sentencias y las pruebas ejecutan 200. ¿Cuál es la cobertura de sentencias?',
+          '80%',
+          '125%',
+          '20%',
+          '50%',
+          '200 / 250 = 0,80 → 80%.'
+        ],
+        // Pregunta 4
+        [
+          'Cálculo',
+          'Un módulo tiene 8 decisiones (16 resultados posibles verdadero/falso). Las pruebas ejercitan 12 resultados. ¿Cobertura de decisiones?',
+          '75%',
+          '12%',
+          '50%',
+          '133%',
+          '12 / 16 = 0,75 → 75%. Cada decisión debe evaluarse como verdadera y como falsa.'
+        ],
+        // Pregunta 5
+        [
+          'Verdadero o falso',
+          '«100% de cobertura de sentencias garantiza que el software no tiene defectos». ¿Es correcto?',
+          'Falso: ejecutar el código no garantiza ausencia de defectos ni verifica requisitos no implementados',
+          'Verdadero: si todo se ejecuta no puede haber errores',
+          'Verdadero, siempre que las pruebas sean manuales',
+          'Falso: solo importa la cobertura de decisiones',
+          'La cobertura mide qué código se ejercita, no la calidad de las verificaciones ni lo que falta implementar.'
+        ],
+        // Pregunta 6
+        [
+          'Escenario',
+          '¿Qué diferencia existe entre cobertura de pruebas y porcentaje de aprobación?',
+          'La cobertura mide cuánto del código/requisitos se ejercita; la aprobación, cuántas pruebas ejecutadas pasaron',
+          'Son lo mismo con distinto nombre',
+          'La cobertura cuenta defectos; la aprobación cuenta líneas',
+          'La aprobación mide cuánto código existe; la cobertura, cuántas pruebas fallan',
+          'Una suite puede aprobar el 100% y cubrir solo el 20% del código: son dimensiones distintas.'
+        ]
+      ]
+    },
+    // ===== CAPÍTULO 2 – LABORATORIO DE DEFECTOS (Gorgón) =====
+    {
+      n: 'LABORATORIO DE DEFECTOS',
+      // Jefe y su descripción
+      b: 'Gorgón',
+      t: 'La Reina de la Densidad',
+      a: '🐙',
+      ic: '👁️',
+      d: 'Densidad, severidad, prioridad y estado de defectos.',
+      // Escena previa: [personaje, texto]
+      intro: [
+        [
+          'M',
+          'El laboratorio central está infectado por Gorgón. Detecto cientos de defectos repartidos en distintos módulos.'
+        ],
+        ['A', 'Debo ubicar dónde se concentran y analizar su densidad.']
+      ],
+      // Mensaje del jefe al iniciar
+      taunt: 'Cada uno de mis ojos es un defecto que ignoraste.',
+      // Burla del jefe al fallar
+      m: '¡Mis ojos lo ven todo, incluidos tus errores!',
+      // Escena de victoria
+      win: [
+        ['B', 'Mis ojos... se apagan...'],
+        ['M', 'Defectos contenidos. El laboratorio vuelve a la normalidad. Recuperé un registro.']
+      ],
+      // Documento secreto [título, texto]
+      doc: [
+        'Registro de defectos críticos',
+        '412 defectos abiertos, 37 críticos, concentrados en el módulo de energía. En el informe ejecutivo aparecen como 0. Alguien cerró tickets sin corregirlos.'
+      ],
+      // Preguntas del capítulo
+      Q: [
+        // Pregunta 1
+        [
+          'Concepto',
+          '¿Qué representa la densidad de defectos?',
+          'La cantidad de defectos por unidad de tamaño del software (p. ej. por KLOC)',
+          'El tiempo que tarda en corregirse un defecto',
+          'El porcentaje de pruebas que fallan',
+          'La urgencia con que se corrige un defecto',
+          'Densidad = defectos / tamaño (KLOC o puntos de función). Permite comparar módulos de tamaños distintos.'
+        ],
+        // Pregunta 2
+        [
+          'Cálculo',
+          'Se hallaron 45 defectos en 15 KLOC. ¿Cuál es la densidad de defectos?',
+          '3 defectos/KLOC',
+          '0,33 defectos/KLOC',
+          '30 defectos/KLOC',
+          '675 defectos/KLOC',
+          '45 / 15 = 3 defectos por KLOC.'
+        ],
+        // Pregunta 3
+        [
+          'Escenario',
+          'Pagos: 6 defectos en 1 KLOC; Login: 12 en 4; Reportes: 15 en 5; Perfil: 4 en 2. ¿Qué módulo concentra la mayor densidad?',
+          'Pagos (6 def/KLOC)',
+          'Reportes, por tener más defectos absolutos',
+          'Login (12 defectos en 4 KLOC)',
+          'Perfil (2 def/KLOC)',
+          'Densidades: Pagos 6, Login 3, Reportes 3, Perfil 2. Más defectos absolutos (Reportes) no implica mayor densidad.'
+        ],
+        // Pregunta 4
+        [
+          'Asociación',
+          '¿Qué describe correctamente severidad y prioridad?',
+          'Severidad: impacto técnico del defecto; prioridad: urgencia con que debe corregirse',
+          'Severidad: urgencia; prioridad: impacto técnico',
+          'Ambas miden el tiempo de reparación',
+          'Ambas miden el tamaño del módulo afectado',
+          'La severidad la evalúa QA según el impacto; la prioridad la define el negocio según la urgencia.'
+        ],
+        // Pregunta 5
+        [
+          'Cálculo',
+          'Se encontraron 60 defectos y 45 fueron corregidos y cerrados. ¿Cuántos siguen abiertos y qué porcentaje se corrigió?',
+          '15 abiertos; 75% corregido',
+          '15 abiertos; 25% corregido',
+          '45 abiertos; 75% corregido',
+          '105 abiertos; 75% corregido',
+          'Abiertos = 60 − 45 = 15. Corrección = 45 / 60 = 75%.'
+        ],
+        // Pregunta 6
+        [
+          'Verdadero o falso',
+          '«Un defecto de baja severidad nunca puede tener prioridad alta». ¿Es correcto?',
+          'Falso: un error cosmético en el logo de la página principal antes de una campaña es poco severo pero urgente',
+          'Verdadero: severidad y prioridad siempre coinciden',
+          'Verdadero: la prioridad solo depende del código',
+          'Falso: la prioridad solo la define el desarrollador',
+          'Severidad y prioridad son independientes; el contexto de negocio puede hacer urgente un defecto menor.'
+        ]
+      ]
+    },
+    // ===== CAPÍTULO 3 – DISTRITO DEL TIEMPO (Cronos) =====
+    {
+      n: 'DISTRITO DEL TIEMPO',
+      // Jefe y su descripción
+      b: 'Cronos',
+      t: 'El Señor del MTTR',
+      a: '⏳',
+      ic: '⌛',
+      d: 'MTTR, MTBF, inactividad y disponibilidad.',
+      // Escena previa: [personaje, texto]
+      intro: [
+        [
+          'M',
+          'Cronos controla el sistema temporal del distrito. Los servidores fallan y cada reparación tarda más.'
+        ],
+        ['A', 'Analicemos MTTR, MTBF y disponibilidad para estabilizar el reloj.']
+      ],
+      // Mensaje del jefe al iniciar
+      taunt: 'El tiempo se agota, Alex. Cada fallo dura más que el anterior.',
+      // Burla del jefe al fallar
+      m: 'Tic, tac... otra falla más.',
+      // Escena de victoria
+      win: [
+        ['B', 'El reloj... se detiene...'],
+        ['M', 'Tiempo restablecido. Disponibilidad recuperada.']
+      ],
+      // Documento secreto [título, texto]
+      doc: [
+        'Historial de disponibilidad',
+        'MTTR del último mes: 9 h; MTBF: 14 h. Disponibilidad real: 61%. Vance ordenó reportar «99,9%» al consejo.'
+      ],
+      // Preguntas del capítulo
+      Q: [
+        // Pregunta 1
+        [
+          'Concepto',
+          '¿Qué es el MTTR?',
+          'El tiempo promedio que se tarda en reparar y restaurar el servicio tras una falla',
+          'El tiempo promedio entre dos fallas consecutivas',
+          'El porcentaje de tiempo que el sistema está activo',
+          'El número total de fallas por mes',
+          'MTTR (Mean Time To Repair) = tiempo total de reparación / número de reparaciones.'
+        ],
+        // Pregunta 2
+        [
+          'Cálculo',
+          'Tres fallas se repararon en 2 h, 4 h y 6 h. ¿Cuál es el MTTR?',
+          '4 h',
+          '12 h',
+          '6 h',
+          '3 h',
+          '(2 + 4 + 6) / 3 = 4 horas.'
+        ],
+        // Pregunta 3
+        [
+          'Cálculo',
+          'Un sistema funcionó 20 horas y presentó 2 fallos. ¿Cuál es el MTBF (con el tiempo de funcionamiento)?',
+          '10 horas',
+          '40 horas',
+          '2 horas',
+          '22 horas',
+          'MTBF = tiempo operativo / número de fallos = 20 / 2 = 10 h.'
+        ],
+        // Pregunta 4
+        [
+          'Cálculo',
+          'MTBF = 90 h y MTTR = 10 h. ¿Cuál es la disponibilidad? (MTBF / (MTBF + MTTR))',
+          '90%',
+          '10%',
+          '95%',
+          '99%',
+          '90 / (90 + 10) = 0,90 → 90%.'
+        ],
+        // Pregunta 5
+        [
+          'Escenario',
+          '¿Qué significa un MTTR elevado?',
+          'El sistema tarda mucho en recuperarse: más inactividad y menor disponibilidad',
+          'El sistema falla con poca frecuencia',
+          'Las pruebas tienen alta cobertura',
+          'Hay pocos defectos en producción',
+          'Más tiempo de reparación significa mayor tiempo caído y, por tanto, menor disponibilidad.'
+        ],
+        // Pregunta 6
+        [
+          'Cálculo',
+          'En un mes de 720 h el servicio estuvo caído 36 h. ¿Cuál fue la disponibilidad?',
+          '95%',
+          '5%',
+          '96%',
+          '90%',
+          '(720 − 36) / 720 = 684 / 720 = 0,95 → 95%.'
+        ]
+      ]
+    },
+    // ===== CAPÍTULO 4 – NÚCLEO DE CALIDAD (Némesis) =====
+    {
+      n: 'NÚCLEO DE CALIDAD',
+      // Jefe y su descripción
+      b: 'Némesis',
+      t: 'El Guardián de la Calidad',
+      a: '👾',
+      ic: '⚡',
+      d: 'Eficiencia, aprobación, fallos y tendencias.',
+      // Escena previa: [personaje, texto]
+      intro: [
+        [
+          'M',
+          'Némesis custodia el núcleo principal. Los informes se contradicen: alguien manipuló los resultados.'
+        ],
+        ['A', 'Voy a interpretar correctamente los indicadores y restaurar el núcleo.']
+      ],
+      // Mensaje del jefe al iniciar
+      taunt: 'Soy el reflejo de los datos corruptos. Distingue la verdad de la mentira.',
+      // Burla del jefe al fallar
+      m: 'Tus indicadores mienten... o quizá tú.',
+      // Escena de victoria
+      win: [
+        ['B', 'Los datos... vuelven a ser coherentes...'],
+        ['M', 'Núcleo de calidad estable. Pero ese fallo no fue accidental.']
+      ],
+      // Documento secreto [título, texto]
+      doc: [
+        'Informe de calidad de Genesis-OS',
+        'Pruebas aprobadas: 58%; ejecutadas: solo 40%. Un sistema experimental, «Protocolo Cero», filtraba las pruebas fallidas antes de llegar al panel.'
+      ],
+      // Preguntas del capítulo
+      Q: [
+        // Pregunta 1
+        [
+          'Cálculo',
+          'Se ejecutaron 50 pruebas y 40 pasaron correctamente. ¿Cuál es el porcentaje de aprobación?',
+          '80%',
+          '20%',
+          '125%',
+          '90%',
+          '40 / 50 = 0,80 → 80%.'
+        ],
+        // Pregunta 2
+        [
+          'Cálculo',
+          'De 200 pruebas ejecutadas, 30 fallaron. ¿Qué porcentaje de pruebas fallidas hay?',
+          '15%',
+          '30%',
+          '85%',
+          '6,7%',
+          '30 / 200 = 0,15 → 15%.'
+        ],
+        // Pregunta 3
+        [
+          'Cálculo',
+          'Antes del lanzamiento QA halló 90 defectos y en producción aparecieron 10 más. ¿Cuál es la eficiencia de detección de defectos?',
+          '90%',
+          '10%',
+          '11%',
+          '100%',
+          'DDE = defectos hallados por QA / (hallados por QA + escapados) = 90 / 100 = 90%.'
+        ],
+        // Pregunta 4
+        [
+          'Escenario',
+          'Defectos abiertos por semana: 40, 32, 21, 25. ¿Cómo se interpreta la tendencia?',
+          'Mejoró hasta la semana 3, pero el repunte de la semana 4 exige investigar una posible regresión',
+          'La calidad mejora de forma constante',
+          'Los defectos ya están eliminados',
+          'La tendencia no aporta información',
+          'Una tendencia debe leerse completa: un rebote tras una bajada suele indicar regresiones o cambios riesgosos.'
+        ],
+        // Pregunta 5
+        [
+          'Escenario',
+          'Una suite aprueba el 100% de sus pruebas pero solo cubre el 20% del código. ¿Qué indica?',
+          'Resultado engañoso: alta aprobación con baja cobertura no demuestra calidad',
+          'Que el software es de calidad excelente',
+          'Que sobran pruebas',
+          'Que la densidad de defectos es cero',
+          'Aprobar todo lo poco que se prueba no dice nada sobre lo que no se probó.'
+        ],
+        // Pregunta 6
+        [
+          'Asociación',
+          '¿Qué fórmula calcula el porcentaje de pruebas aprobadas?',
+          '(Pruebas aprobadas / Pruebas ejecutadas) × 100',
+          '(Pruebas aprobadas / Pruebas diseñadas) × 100',
+          '(Pruebas fallidas / Pruebas aprobadas) × 100',
+          '(Defectos / KLOC) × 100',
+          'La aprobación se calcula sobre las pruebas ejecutadas, no sobre las diseñadas.'
+        ]
+      ]
+    },
+    // ===== CAPÍTULO 5 – PROTOCOLO CERO (Director Vance) =====
+    {
+      n: 'PROTOCOLO CERO',
+      // Jefe y su descripción
+      b: 'Director Vance',
+      t: 'El Protocolo Cero',
+      a: '🕴️',
+      ic: '🛡️',
+      d: 'Evaluación final: 10 preguntas de alta dificultad.',
+      // Escena previa: [personaje, texto]
+      intro: [
+        [
+          'M',
+          'Alex, Vance manipuló los informes de calidad. Un sistema experimental ocultaba defectos y alteraba métricas.'
+        ],
+        ['V', 'GRABACIÓN 0x7F: «Si los números dicen rojo, los cambiamos a verde. El Go-Live no se retrasa.»'],
+        ['A', 'Entonces el equipo original descubrió los defectos...'],
+        ['M', 'Llegamos al servidor central. Diez preguntas. Sin margen de error.'],
+        ['V', 'Bienvenido, Alex. Protocolo Cero activado. Tus métricas no sobrevivirán.']
+      ],
+      // Mensaje del jefe al iniciar
+      taunt: 'Los informes dicen que Genesis-OS es perfecto. ¿Quién eres tú para contradecirlos?',
+      // Burla del jefe al fallar
+      m: 'Los números pueden ajustarse. Tu vida, no.',
+      // Escena de victoria
+      win: [
+        ['V', 'Imposible... mis informes eran impecables...'],
+        ['M', 'Impecables y falsos. Protocolo Cero desactivado.']
+      ],
+      // Documento secreto [título, texto]
+      doc: [
+        'Mensajes confidenciales del Director Vance',
+        '«Si el equipo insiste en detener el lanzamiento, aíslenlos en la partición congelada. Que nadie los busque. El Go-Live es lo único que importa.»'
+      ],
+      // Preguntas del capítulo
+      Q: [
+        // Pregunta 1
+        [
+          'Cálculo',
+          'Hay 100 casos diseñados, 80 ejecutados y 60 de ellos pasaron. ¿Porcentaje de ejecución y de aprobación?',
+          'Ejecución 80%; aprobación 75%',
+          'Ejecución 80%; aprobación 60%',
+          'Ejecución 60%; aprobación 75%',
+          'Ejecución 75%; aprobación 80%',
+          'Ejecución = 80/100 = 80%. Aprobación = 60/80 = 75% (sobre ejecutadas).'
+        ],
+        // Pregunta 2
+        [
+          'Escenario',
+          'Versión nueva: 36 defectos en 12 KLOC. Versión anterior: 5 defectos/KLOC. ¿Qué se concluye?',
+          'Densidad de 3 def/KLOC: mejora respecto a la anterior',
+          'Densidad de 36 def/KLOC: empeora',
+          'Densidad de 3 def/KLOC: empeora',
+          'Densidad de 0,33 def/KLOC: empeora',
+          '36 / 12 = 3 defectos por KLOC, menor que 5: la calidad mejoró.'
+        ],
+        // Pregunta 3
+        [
+          'Cálculo',
+          'MTBF = 190 h y MTTR = 10 h. ¿Cuál es la disponibilidad?',
+          '95%',
+          '90%',
+          '99%',
+          '19%',
+          '190 / (190 + 10) = 190 / 200 = 0,95 → 95%.'
+        ],
+        // Pregunta 4
+        [
+          'Cálculo',
+          'Un sistema operó 100 h con 4 fallos y 8 h de reparación en total. ¿MTBF y MTTR?',
+          'MTBF 25 h; MTTR 2 h',
+          'MTBF 25 h; MTTR 8 h',
+          'MTBF 100 h; MTTR 2 h',
+          'MTBF 2 h; MTTR 25 h',
+          'MTBF = 100 / 4 = 25 h. MTTR = 8 / 4 = 2 h.'
+        ],
+        // Pregunta 5
+        [
+          'Escenario',
+          'Vance afirma «0 defectos críticos abiertos», pero solo se ejecutó el 30% de las pruebas. ¿Qué concluye un QA?',
+          'No se puede asegurar nada: con tan baja ejecución, la métrica carece de contexto y puede ocultar defectos',
+          'Que el sistema está libre de defectos',
+          'Que la cobertura es del 100%',
+          'Que el MTTR es cero',
+          'Un indicador solo es válido si se interpreta junto al avance real de ejecución y la cobertura.'
+        ],
+        // Pregunta 6
+        [
+          'Cálculo',
+          'QA halló 60 defectos antes del lanzamiento y los clientes reportaron 20 más. ¿Cuál es la eficiencia de detección?',
+          '75%',
+          '25%',
+          '33%',
+          '300%',
+          '60 / (60 + 20) = 0,75 → 75%.'
+        ],
+        // Pregunta 7
+        [
+          'Escenario',
+          'Un fallo provoca un cierre inesperado en un módulo usado una vez al año, sin solución alterna. ¿Clasificación más razonable?',
+          'Severidad alta; prioridad baja',
+          'Severidad baja; prioridad alta',
+          'Severidad baja; prioridad baja',
+          'No se puede clasificar',
+          'El impacto técnico es alto, pero la baja frecuencia de uso permite aplazar su corrección.'
+        ],
+        // Pregunta 8
+        [
+          'Cálculo',
+          'El objetivo es 99,9% de disponibilidad en un mes de 720 h. ¿Cuánta inactividad máxima se permite?',
+          '0,72 h (≈ 43 min)',
+          '7,2 h',
+          '0,072 h',
+          '1,44 h',
+          'Inactividad permitida = 720 × (1 − 0,999) = 0,72 h ≈ 43 minutos.'
+        ],
+        // Pregunta 9
+        [
+          'Concepto',
+          'Una suite logra 90% de cobertura de sentencias pero solo 60% de decisiones. ¿Qué indica?',
+          'Hay ramas condicionales sin probar; la cobertura de decisiones es más exigente',
+          'Que no hay ramas por probar',
+          'Que la cobertura de decisiones no sirve',
+          'Que las pruebas fallan el 40%',
+          'Se ejecutan casi todas las líneas, pero no todos los resultados verdadero/falso de las decisiones.'
+        ],
+        // Pregunta 10
+        [
+          'Escenario',
+          '¿Qué combinación refleja un sistema más saludable?',
+          'Cobertura alta, densidad baja, MTBF alto y MTTR bajo',
+          'Cobertura baja, densidad alta, MTBF bajo y MTTR alto',
+          'Cobertura alta, MTBF bajo y MTTR alto',
+          'Aprobación 100% con solo 10% de ejecución',
+          'Más cobertura, menos defectos por KLOC, más tiempo entre fallos y reparaciones rápidas indican mayor calidad.'
+        ]
+      ]
+    }
+  ];
+  // ===== NARRATIVA =====
+  // Reproductor de diálogos: muestra cada línea y ejecuta cb al terminar
+  function talk(L, btn, cb, c=0) {
+    let i=0;
+    (function st() {
+      const[w, t]=L[i], a=w=='B'? {
+        e: C[c].a,
+        n: C[c].b
+      }:P[w];
+      go(`<div class=p style="margin-top:12vh;text-align:center"><div class=av>${a.e}</div><h3 class="${w=='V'||w=='B'?'rd':''}">${a.n}</h3><p style="font-size:1.1em;margin:12px 0">${t}</p><button class=bt onclick="N()">${i<L.length-1?'SIGUIENTE DIÁLOGO':btn}</button></div>`);
+      window.N=() => {
+        beep(520, .06);
+        ++i<L.length?st():cb()
+      }
+    })()
+  }
+  // ===== PANTALLAS =====
+  // Pantalla de inicio
+  function home() {
+    go(`<div style="text-align:center;margin-top:4vh"><svg viewBox="0 0 200 200" width="180" height="180"><g fill="none" stroke="#00F0FF"><circle cx="100" cy="100" r="85" stroke-dasharray="8 6" opacity=".6"><animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="20s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="60" stroke="#8B5CF6" stroke-width="3"><animate attributeName="r" values="58;64;58" dur="3s" repeatCount="indefinite"/></circle><circle cx="100" cy="100" r="30" fill="#00A8FF" opacity=".35"/></g><text x="100" y="104" fill="#F1F5F9" font-size="11" text-anchor="middle" font-family="monospace">GENESIS-OS</text></svg><h1 class=gl>CHRONICLES</h1><div class=sub>EL DESPERTAR DE LAS MÉTRICAS</div><div class=mn><button class=bt onclick=newG()>NUEVA PARTIDA</button><button class=bt ${S.st?'':'disabled'} onclick=map()>CONTINUAR</button><button class=bt onclick=stats()>ESTADÍSTICAS</button><button class=bt onclick=arch()>ARCHIVOS</button><button class=bt onclick=cfg()>CONFIGURACIÓN</button></div></div>`)
+  }
+  // NUEVA PARTIDA: reinicia el progreso (con confirmación) y lanza la introducción
+  function newG() {
+    if(S.st&&!confirm('Se borrará el progreso actual. ¿Continuar?'))return;
+    const s=S.snd;
+    S=D();
+    S.snd=s;
+    S.st=1;
+    sv();
+    talk([
+      [
+        'S',
+        'Año 2099. Aethelgard Systems lanzará Genesis-OS en 72 horas: hospitales, transporte, energía y comunicaciones de todo el planeta dependerán de él.'
+      ],
+      [
+        'S',
+        'Las alarmas del núcleo se activaron: fallos invisibles, módulos inestables... y el equipo de desarrollo original ha desaparecido.'
+      ],
+      ['V', 'GRABACIÓN: «Genesis-OS saldrá a tiempo. Los informes están en verde. No hagas preguntas.»'],
+      ['A', 'Último recurso, ¿eh? Era el único QA que quedaba.'],
+      [
+        'M',
+        'Bienvenido, Alex. Tus probabilidades de supervivencia son cuestionables. Pero al menos sabes leer indicadores... ¿verdad?'
+      ],
+      ['A', 'Tendré que aprender rápido. Inicia el primer diagnóstico.']
+    ], 'ABRIR MAPA', map)
+  }
+  // Barra superior con nivel, XP e insignias
+  const hudTop=() => `<div class="p hud"><span>🧑‍💻 NIVEL ${lv()}</span><span>XP: <b id=xpv>${S.xp}</b></span><span style="flex:1;min-width:90px"><div class=bar><i style="width:${S.xp%300/3}%"></i></div></span><span>${S.done.map(i=>BADGES[i].split(' ')[0]).join(' ')||'Sin insignias'}</span></div>`;
+  // Pantalla de mapa: sectores bloqueados, disponibles o completados
+  function map() {
+    go(`<h2 style="color:var(--c);margin-top:8px">MAPA DE GENESIS-OS</h2>`+hudTop()+C.map((c, i) => {
+      const d=S.done.includes(i), o=open(i), pr=d?100:Math.round(S.xpQ.filter(x => x.startsWith(i+'-')).length/c.Q.length*100);
+      return`<div class="p ch ${o?'':'lk'}"><div class=av2>${o?c.a:'🔒'}</div><div style="flex:1;min-width:200px"><b>${i+1}. ${c.n}</b><span class="tg ${d?'g':o?'':'r'}">${d?'COMPLETADO':o?'DISPONIBLE':'BLOQUEADO'}</span><div class=dim>${c.d}</div><div class=dim>Jefe: ${c.b} – ${c.t} · ${c.Q.length} preguntas</div><div class=bar><i style="width:${pr}%"></i></div></div>${o?`<button class=bt onclick="start(${i})">${d?'REPETIR':'ACCEDER'}</button>`:''}</div>`
+    }).join('')+`<button class=bt onclick=home()>← MENÚ</button>`)
+  }
+  // Inicia un capítulo: escena -> mensaje del jefe -> combate (no permite capítulos bloqueados)
+  function start(c) {
+    if(!open(c))return;
+    S.att++;
+    sv();
+    talk(C[c].intro, 'ACCEDER AL DIAGNÓSTICO', () => talk([['B', C[c].taunt]], 'INICIAR MISIÓN', () => fight(c), c), c)
+  }
+  // ===== COMBATE =====
+  // B guarda el estado del combate actual
+  let B;
+  // Crea un combate nuevo: 3 vidas y jefe con vida completa
+  function fight(c) {
+    B= {
+      c,
+      q: C[c].Q.map((_, k) => k),
+      i: 0,
+      l: 3,
+      h: 0,
+      s: 0,
+      xp: 0,
+      lost: 0,
+      ok: 0,
+      bad: 0,
+      sel: null,
+      lock: 0,
+      fin: 0
+    };
+    ren()
+  }
+  // Indicadores del jefe: se destruye uno por cada respuesta correcta
+  const pips=() => {
+    const c=C[B.c];
+    return c.Q.map((_, j) => j<B.h?'💥':c.ic).join(' ')
+  };
+  // Dibuja HUD, jefe, pregunta y opciones (las opciones se barajan)
+  function ren() {
+    const c=C[B.c], n=c.Q.length, x=c.Q[B.q[B.i]];
+    B.o=shuf([[x[2], 1], [x[3], 0], [x[4], 0], [x[5], 0]]);
+    B.sel=null;
+    B.lock=0;
+    go(`<div class="p hud"><span>🧑‍💻 ALEX</span><span class=core id=lv>${'⬢'.repeat(B.l)+'⬡'.repeat(3-B.l)}</span><span>XP <b id=xpv>${S.xp}</b> · NV ${lv()}</span><span>Racha: <b id=rc>${B.s}</b> · Mejor: ${S.best}</span><span>Progreso: <b id=pg>${B.h}/${n}</b></span></div>
+<div class=p style="text-align:center"><div id=en class=en>${c.a}</div><div><b class=rd>${c.b}</b> – ${c.t}</div><div class="bar e"><i id=hp style="width:${(1-B.h/n)*100}%"></i></div><div class=pips id=pp>${pips()}</div></div>
+<div class=p><div class=dim>🤖 M.A.R.I.A. presenta el desafío · ${x[0].toUpperCase()}</div><p class=q>${x[1]}</p>${B.o.map((o,i)=>`<button class=op onclick="pick(${i})">${'ABCD'[i]}) ${o[0]}</button>`).join('')}<button class=bt id=cf disabled onclick=cfm()>CONFIRMAR RESPUESTA</button><div id=fb></div></div>`)
+  }
+  // Marca una opción (aún sin confirmar)
+  function pick(i) {
+    if(B.lock)return;
+    B.sel=i;
+    document.querySelectorAll('.op').forEach((e, j) => e.classList.toggle('sel', j==i));
+    $('#cf').disabled=false;
+    beep(400, .04)
+  }
+  // Confirma la respuesta: calcula XP, vidas, daño al jefe y muestra la retroalimentación
+  function cfm() {
+    if(B.lock||B.sel==null)return;
+    B.lock=1;
+    const c=C[B.c], n=c.Q.length, k=B.q[B.i], x=c.Q[k], id=B.c+'-'+k, r=B.o[B.sel][1];
+    let msg, g=0, ex='';
+    S.ans++;
+    document.querySelectorAll('.op').forEach((e, j) => e.classList.add(B.o[j][1]?'ok':j==B.sel?'no':'x'));
+    $('#cf').remove();
+    if(r) {
+      S.ok++;
+      B.ok++;
+      B.h++;
+      B.s++;
+      S.best=Math.max(S.best, B.s);
+      if(!S.xpQ.includes(id)) {
+        S.xpQ.push(id);
+        g=100;
+        if(B.s%3==0) {
+          g+=50;
+          ex=' ¡Racha x3! +50 XP.'
+        }
+      }
+      B.xp+=g;
+      S.xp+=g;
+      beep(880, .2);
+      msg=rnd([
+        'Interesante. Has detectado el error. Por una vez, la humanidad me sorprende.',
+        'Buen trabajo. El sistema acaba de recuperar estabilidad.',
+        'Diagnóstico correcto. El enemigo se tambalea.'
+      ]);
+      const e=$('#en');
+      e.classList.add('hit');
+      setTimeout(() => e.classList.remove('hit'), 600);
+      $('#hp').style.width=(1-B.h/n)*100+'%';
+      $('#pp').textContent=pips();
+      $('#pg').textContent=B.h+'/'+n
+    } else {
+      S.bad++;
+      B.bad++;
+      B.l--;
+      B.lost=1;
+      B.s=0;
+      B.q.push(k);
+      beep(140, .4, 'sawtooth');
+      msg=rnd([
+        'Error de diagnóstico. Parece que hoy los bugs están ganando.',
+        'El núcleo pierde energía. Concéntrate, Alex.',
+        'Eso dolió... y eso que no tengo nervios.'
+      ])+`<br><span class=rd>${c.b}: «${c.m}»</span>`;
+      $('#v').classList.add('fl');
+      $('#lv').textContent='⬢'.repeat(B.l)+'⬡'.repeat(3-B.l)
+    }
+    sv();
+    $('#xpv').textContent=S.xp;
+    $('#rc').textContent=B.s;
+    $('#fb').innerHTML=`<div class=p style="border-color:var(--${r?'g':'r'})"><b class="${r?'g':'rd'}">${r?'✔ CORRECTO':'✖ INCORRECTO'}${g?' +'+g+' XP':''}${ex}</b><br>🤖 ${msg}<p style="margin-top:8px">📘 ${x[6]}</p>${r?'':'<p class=dim>Esta pregunta volverá a aparecer al final del combate.</p>'}</div><button class=bt id=nx onclick=nxt()>CONTINUAR</button>`
+  }
+  // Continúa: Game Over, derrota del jefe o siguiente pregunta
+  function nxt() {
+    if(B.fin)return;
+    const n=C[B.c].Q.length;
+    if(B.l<=0) {
+      B.fin=1;
+      return over()
+    }
+    if(B.h>=n) {
+      B.fin=1;
+      $('#nx').disabled=true;
+      $('#en').classList.add('die');
+      beep(120, 1, 'sawtooth');
+      return setTimeout(win, 1400)
+    }
+    B.i++;
+    ren()
+  }
+  // Pantalla de derrota
+  function over() {
+    const c=C[B.c];
+    go(`<div class=p style="text-align:center;margin-top:8vh;border-color:var(--r)"><div class=av>💀</div><h1 class=rd style="font-size:clamp(28px,7vw,52px)">SISTEMA COLAPSADO</h1><p style="margin:12px 0">🤖 «Alex, el núcleo ha perdido estabilidad. No fue nuestro mejor diagnóstico... pero todavía tenemos una copia de seguridad. Vamos otra vez.»</p><div class=grid><div class=p><b>${B.ok}</b>correctas</div><div class=p><b>${B.bad}</b>incorrectas</div><div class=p><b>${B.xp}</b>XP conseguida</div><div class=p><b>${B.h}/${c.Q.length}</b>${c.b} debilitado</div></div><div class=mn><button class="bt r" onclick="S.att++;sv();fight(${B.c})">REINTENTAR</button><button class=bt onclick=map()>VOLVER AL MAPA</button></div></div>`)
+  }
+  // Jefe derrotado: guarda progreso y da bonificaciones únicas (sin duplicar)
+  function win() {
+    const c=B.c;
+    let ex='';
+    if(!S.done.includes(c))S.done.push(c);
+    if(!B.lost&&!S.bonus.includes('c'+c)) {
+      S.bonus.push('c'+c);
+      S.xp+=250;
+      B.xp+=250;
+      ex+='<div class=g>+250 XP: capítulo sin perder vidas</div>'
+    }
+    if(c==4&&!S.bonus.includes('f')) {
+      S.bonus.push('f');
+      S.xp+=500;
+      B.xp+=500;
+      ex+='<div class=g>+500 XP: jefe final derrotado</div>'
+    }
+    sv();
+    talk(C[c].win, c==4?'REVELAR LA VERDAD':'VER RESULTADOS', () => c==4?fin():vic(c, ex), c)
+  }
+  // Pantalla de victoria
+  function vic(c, ex) {
+    const d=C[c].doc;
+    go(`<div class=p style="text-align:center;margin-top:4vh;border-color:var(--g)"><div class=av>✅</div><h1 style="font-size:clamp(26px,7vw,48px)" class=g>SUBSISTEMA RESTAURADO</h1><div class=dim>${C[c].n}</div><div class=bar><i style="width:100%"></i></div><p>${C[c].b} ha sido desintegrado.</p>${ex}<div class=grid style="margin:14px 0"><div class=p><b>${B.xp}</b>XP obtenida</div><div class=p><b>${B.ok}</b>correctas</div><div class=p><b>${B.bad}</b>incorrectas</div><div class=p><b>${B.ok+B.bad?Math.round(B.ok/(B.ok+B.bad)*100):0}%</b>precisión</div></div><div class=p style="text-align:left"><b>📄 DOCUMENTO DESBLOQUEADO: ${d[0]}</b><br>${d[1]}</div><div class=mn><button class=bt onclick="start(${c+1})">SIGUIENTE CAPÍTULO</button><button class=bt onclick=map()>VOLVER AL MAPA</button></div></div>`)
+  }
+  // Final del juego: epílogo y título AUDITOR LEGENDARIO
+  function fin() {
+    talk([
+      ['V', 'Protocolo Cero... desactivado. Mis informes eran perfectos...'],
+      ['M', 'Perfectos y falsos. Cuando probamos de verdad, apareció la verdad.'],
+      [
+        'S',
+        'Los archivos revelan que el equipo original halló los defectos y exigió detener el lanzamiento. Vance los aisló en una partición congelada del servidor.'
+      ],
+      ['M', 'Los he restaurado: están todos vivos. Los desarrolladores desaparecidos vuelven a casa.'],
+      ['S', 'Genesis-OS recupera su estabilidad. Las ciudades vuelven a encenderse.'],
+      ['A', 'Las métricas no eran solo números. Eran la verdad.']
+    ], 'CONTINUAR', () => {
+      conf();
+      go(`<div class=p style="text-align:center;margin-top:5vh"><div class=av>🌆</div><div class=sub>GENESIS-OS ESTABLE</div><h1 class=gl style="font-size:clamp(28px,8vw,64px)">AUDITOR LEGENDARIO</h1><p style="margin:12px 0">Evitaste la catástrofe mundial. +${B.xp} XP en este combate.</p>${statsHtml()}<div class=mn><button class=bt onclick=arch()>VER ARCHIVOS</button><button class=bt onclick=map()>MAPA</button><button class=bt onclick=home()>MENÚ PRINCIPAL</button></div></div>`)
+    }, 4)
+  }
+  // Confeti digital
+  function conf() {
+    for(let i=0; i<90; i++) {
+      const e=document.createElement('i');
+      e.className='cf';
+      e.style.cssText=`left:${Math.random()*100}vw;background:${['#00A8FF','#00F0FF','#8B5CF6','#FF334F','#F1F5F9'][i%5]};animation-delay:${Math.random()*2}s;animation-duration:${3+Math.random()*3}s`;
+      document.body.append(e);
+      setTimeout(() => e.remove(), 7000)
+    }
+  }
+  // ===== ESTADÍSTICAS, ARCHIVOS Y CONFIGURACIÓN =====
+  // HTML de estadísticas (reutilizado en la pantalla final)
+  function statsHtml() {
+    const a=S.ans?Math.round(S.ok/S.ans*100):0, it=[
+      [S.ans, 'Preguntas respondidas'],
+      [S.ok, 'Correctas'],
+      [S.bad, 'Incorrectas'],
+      [a+'%', 'Precisión'],
+      [S.xp, 'XP acumulada (NV '+lv()+')'],
+      [S.best, 'Mejor racha'],
+      [S.done.length+'/5', 'Capítulos completados'],
+      [S.att, 'Intentos'],
+      [S.done.length, 'Jefes derrotados'],
+      [S.done.length+'/5', 'Documentos']
+    ];
+    return`<div class=grid>${it.map(x=>`<div class=p><b>${x[0]}</b>${x[1]}</div>`).join('')}</div><p style="margin:10px 0">🏅 ${S.done.map(i=>BADGES[i]).join(' · ')||'Sin insignias aún'}</p>`
+  }
+  // Pantalla de estadísticas
+  function stats() {
+    go(`<h2 style="color:var(--c);margin:8px 0">ESTADÍSTICAS</h2>${statsHtml()}<div class=mn><button class=bt onclick=home()>← MENÚ</button></div>`)
+  }
+  // Archivos del sistema: documentos desbloqueados
+  function arch() {
+    go(`<h2 style="color:var(--c);margin:8px 0">ARCHIVOS DEL SISTEMA</h2>`+C.map((c, i) => S.done.includes(i)?`<div class=p><b>📄 ${c.doc[0]}</b><p>${c.doc[1]}</p></div>`:`<div class="p lk">🔒 DOCUMENTO ENCRIPTADO – completa el capítulo ${i+1}</div>`).join('')+`<button class=bt onclick=home()>← MENÚ</button>`)
+  }
+  // Configuración: sonido y reinicio de progreso
+  function cfg() {
+    go(`<h2 style="color:var(--c);margin:8px 0">CONFIGURACIÓN</h2><div class="mn"><button class=bt onclick="S.snd=+!S.snd;sv();beep(600);cfg()">SONIDO: ${S.snd?'ACTIVADO':'DESACTIVADO'}</button><button class="bt r" onclick="if(confirm('¿Reiniciar TODO el progreso? Esta acción no se puede deshacer.')){S=D();sv();home()}">REINICIAR PROGRESO</button><button class=bt onclick=home()>← MENÚ</button></div>`)
+  }
+  // ===== ARRANQUE =====
+  home();
+  </script>
+</body>
+</html>  
